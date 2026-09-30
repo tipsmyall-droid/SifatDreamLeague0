@@ -6,12 +6,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Unzip and list files
+      - name: Unzip project
         run: |
           ls -la
-          for z in *.zip; do [ -f "$z" ] && unzip -o "$z"; done
+          find . -maxdepth 1 -name "*.zip" -exec unzip -o {} \;
           ls -la
-          find . -type f -name "gradlew" | head -20
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -24,7 +23,6 @@ jobs:
           GRADLE_FILE=$(find . -type f -name "gradlew" | head -n 1)
           echo "Found: $GRADLE_FILE"
           GRADLE_DIR=$(dirname "$GRADLE_FILE")
-          echo "Dir: $GRADLE_DIR"
           chmod +x "$GRADLE_FILE"
           cd "$GRADLE_DIR"
           ./gradlew bundleRelease
