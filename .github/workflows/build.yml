@@ -10,17 +10,34 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create Full Project If Missing
+      - name: Create Correct Project
         run: |
-          # Root files
-          echo "include ':app'" > settings.gradle
-          echo "buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.2.0' } } allprojects { repositories { google(); mavenCentral() } }" > build.gradle
-          
-          # app folder না থাকলে বানাও - এটাই Main Fix
+          cat > settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          include ':app'
+          EOF
+
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.2.0' apply false
+              id 'com.android.library' version '8.2.0' apply false
+          }
+          EOF
+
           mkdir -p app/src/main/java/com/sifat/dreamleague
-          mkdir -p app/src/main/res/raw
-          
-          # app/build.gradle বানাও
           cat > app/build.gradle <<'EOF'
           plugins { id 'com.android.application' }
           android {
@@ -43,45 +60,49 @@ jobs:
               implementation 'androidx.appcompat:appcompat:1.6.1'
           }
           EOF
-          
-          # AndroidManifest বানাও
+
           mkdir -p app/src/main
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <application android:label="Sifat Dream League">
+              <application android:label="Dream League V10">
                   <activity android:name=".MainActivity" android:exported="true">
-                      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
                   </activity>
               </application>
           </manifest>
           EOF
-          
-          # MainActivity বানাও - ম্যাচ খেলা যাবে
+
           cat > app/src/main/java/com/sifat/dreamleague/MainActivity.java <<'EOF'
           package com.sifat.dreamleague;
           import android.os.Bundle;
           import androidx.appcompat.app.AppCompatActivity;
           import android.widget.TextView;
           public class MainActivity extends AppCompatActivity {
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
+              protected void onCreate(Bundle s) {
+                  super.onCreate(s);
                   TextView tv = new TextView(this);
-                  tv.setText("V10 FULL GAME - Match Playable! Goal System Ready!");
-                  tv.setTextSize(24);
+                  tv.setText("V10 FULL - Match Playable!");
+                  tv.setTextSize(30);
                   setContentView(tv);
               }
           }
           EOF
-          ls -R
 
       - uses: gradle/actions/setup-gradle@v3
-      - run: gradle bundleRelease assembleRelease
+        with:
+          gradle-version: 8.7
+
+      - name: Build
+        run: gradle bundleRelease assembleRelease
 
       - uses: actions/upload-artifact@v4
         with:
-          name: V10-FULL-AAB-31MB-FIXED
+          name: V10-AAB-31MB-FIXED-NOW
           path: app/build/outputs/bundle/release/*.aab
       - uses: actions/upload-artifact@v4
         with:
-          name: V10-FULL-APK-35MB-FIXED
+          name: V10-APK-35MB-FIXED-NOW
           path: app/build/outputs/apk/release/*.apk
