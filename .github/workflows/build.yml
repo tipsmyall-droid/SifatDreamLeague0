@@ -1,33 +1,48 @@
-name: Build V10 Final
-on: [push, workflow_dispatch]
+name: Build V10 Final Full Game
+on:
+  push:
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      
+
+      - name: Fix Missing Gradle Files
+        run: |
+          # 1. Root এ settings.gradle না থাকলে বানাও
+          if [ ! -f "settings.gradle" ]; then
+            echo "include ':app'" > settings.gradle
+          fi
+          # 2. Root এ build.gradle না থাকলে বানাও
+          if [ ! -f "build.gradle" ]; then
+            echo "buildscript { repositories { google(); mavenCentral() } dependencies { classpath 'com.android.tools.build:gradle:8.2.0' } } allprojects { repositories { google(); mavenCentral() } }" > build.gradle
+          fi
+          ls -la
+          cat settings.gradle
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
-        
-      - name: Build AAB 31MB
-        run: gradle bundleRelease
-        
-      - name: Build APK 35.5MB
-        run: gradle assembleRelease
-        
-      - name: Upload AAB
+
+      - name: Build AAB 31MB + APK 35MB
+        run: gradle bundleRelease assembleRelease --stacktrace
+
+      - name: Upload AAB 31MB
         uses: actions/upload-artifact@v4
         with:
-          name: SifatDreamLeague_V10_AAB_31MB_Full
+          name: V10-FULL-AAB-31MB-PLAYABLE
           path: app/build/outputs/bundle/release/*.aab
-          
-      - name: Upload APK
+
+      - name: Upload APK 35MB
         uses: actions/upload-artifact@v4
         with:
-          name: SifatDreamLeague_V10_APK_35MB_Full
+          name: V10-FULL-APK-35MB-PLAYABLE
           path: app/build/outputs/apk/release/*.apk
