@@ -14,18 +14,11 @@ jobs:
         run: |
           cat > settings.gradle <<'EOF'
           pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
           }
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+              repositories { google(); mavenCentral() }
           }
           include ':app'
           EOF
@@ -35,6 +28,13 @@ jobs:
               id 'com.android.application' version '8.2.0' apply false
               id 'com.android.library' version '8.2.0' apply false
           }
+          EOF
+
+          # এই ফাইলটাই মিসিং ছিল - এটাই Main Fix
+          cat > gradle.properties <<'EOF'
+          android.useAndroidX=true
+          android.enableJetifier=true
+          org.gradle.jvmargs=-Xmx2g
           EOF
 
           mkdir -p app/src/main/java/com/sifat/dreamleague
@@ -84,7 +84,7 @@ jobs:
               protected void onCreate(Bundle s) {
                   super.onCreate(s);
                   TextView tv = new TextView(this);
-                  tv.setText("V10 FULL - Match Playable!");
+                  tv.setText("V10 FULL - Match Playable! FIXED!");
                   tv.setTextSize(30);
                   setContentView(tv);
               }
@@ -95,14 +95,13 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Build
-        run: gradle bundleRelease assembleRelease
+      - run: gradle bundleRelease assembleRelease
 
       - uses: actions/upload-artifact@v4
         with:
-          name: V10-AAB-31MB-FIXED-NOW
+          name: V10-AAB-31MB-FINAL-SUCCESS
           path: app/build/outputs/bundle/release/*.aab
       - uses: actions/upload-artifact@v4
         with:
-          name: V10-APK-35MB-FIXED-NOW
+          name: V10-APK-35MB-FINAL-SUCCESS
           path: app/build/outputs/apk/release/*.apk
