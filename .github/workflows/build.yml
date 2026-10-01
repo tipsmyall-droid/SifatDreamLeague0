@@ -5,18 +5,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - run: chmod +x gradlew
-      - run: ./gradlew bundleRelease
-      - uses: actions/upload-artifact@v4
+      
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        
+      - name: Build AAB 31MB
+        run: gradle bundleRelease
+        
+      - name: Build APK 35.5MB
+        run: gradle assembleRelease
+        
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
         with:
-          name: SifatDreamLeague_V10_AAB_31MB
-          path: app/build/outputs/bundle/release/app-release.aab
-      - run: ./gradlew assembleRelease
-      - uses: actions/upload-artifact@v4
+          name: SifatDreamLeague_V10_AAB_31MB_Full
+          path: app/build/outputs/bundle/release/*.aab
+          
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: SifatDreamLeague_V10_APK_35MB
-          path: app/build/outputs/apk/release/app-release.apk
+          name: SifatDreamLeague_V10_APK_35MB_Full
+          path: app/build/outputs/apk/release/*.apk
